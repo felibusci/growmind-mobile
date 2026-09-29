@@ -38,7 +38,7 @@ Devolvé SOLO un JSON válido con esta forma exacta, todo en español salvo los 
   "comoSePide": "el camino: qué se pide, a cambio de qué, qué aval escrito hace falta antes de anunciar",
   "riesgos": ["3 a 5 riesgos concretos: permisos, energía, acceso, clima, ruido, fecha que pisa otra cosa"],
   "trackDelLugar": "idea del track original inspirado en el lugar, qué se graba ahí (sonido del lugar) y qué productor tipo",
-  "mailApertura": "el mail de apertura escrito en la voz de Felipe siguiendo todas las reglas, sin asunto, firma Felipe",
+  "mailApertura": "el mail de apertura escrito en la voz de Felipe siguiendo todas las reglas, sin asunto, firma Felipe. Nunca inventes el nombre del destinatario: abrí con [nombre] querido, o con buenas si no hay nombre",
   "promptPlaca": "prompt de imagen en inglés con la fórmula de cuatro bloques",
   "promptVideo": "prompt de video en inglés, movimiento y cámara"
 }`;

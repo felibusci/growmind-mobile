@@ -51,6 +51,16 @@ export async function GET(req: NextRequest) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return NextResponse.json({ ok: false, error: "GEMINI_API_KEY no configurada" }, { status: 500 });
   const q = req.nextUrl.searchParams;
+  if (q.get("modelos")) {
+    // Lista los modelos que esta key puede usar, con sus metodos.
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?pageSize=200&key=${apiKey}`);
+    const data = await res.json();
+    const modelos = (data?.models ?? []).map((m: { name: string; supportedGenerationMethods?: string[] }) => ({
+      name: m.name,
+      methods: m.supportedGenerationMethods,
+    }));
+    return NextResponse.json({ ok: res.ok, status: res.status, modelos, error: data?.error?.message });
+  }
   const nombre = q.get("lugar");
   if (nombre) {
     const tipo = q.get("tipo") === "privado" ? "privado" : "publico";

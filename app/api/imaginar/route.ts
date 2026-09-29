@@ -41,6 +41,30 @@ Devolvé SOLO un JSON válido con esta forma exacta, todo en español salvo los 
   "promptVideo": "prompt de video en inglés, movimiento y cámara"
 }`;
 
+// GET /api/imaginar
+// Chequeo de salud: confirma que la key esta cargada y que el modelo responde.
+export async function GET() {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return NextResponse.json({ ok: false, error: "GEMINI_API_KEY no configurada" }, { status: 500 });
+  try {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts: [{ text: "Respondé solo con la palabra: listo" }] }],
+        generationConfig: { maxOutputTokens: 5, temperature: 0 },
+      }),
+    });
+    const data = await res.json();
+    const texto: string = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+    if (!res.ok) return NextResponse.json({ ok: false, model: GEMINI_MODEL, status: res.status, error: data?.error?.message ?? "sin detalle" }, { status: 502 });
+    return NextResponse.json({ ok: true, model: GEMINI_MODEL, respuesta: texto.trim() });
+  } catch (e) {
+    return NextResponse.json({ ok: false, model: GEMINI_MODEL, error: e instanceof Error ? e.message : String(e) }, { status: 500 });
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const apiKey = process.env.GEMINI_API_KEY;

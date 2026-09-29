@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { VOZ_FELIPE } from "@/lib/voz";
 import type { ConceptoIA, Lugar, ParamsPresupuesto, ResultadoPresupuesto } from "@/lib/tipos";
+import { PARAMS_DEFAULT } from "@/lib/lugares";
+import { calcularPresupuesto } from "@/lib/presupuesto";
 
 // POST /api/imaginar
 // Body: { lugar: Lugar, params: ParamsPresupuesto, resultado: ResultadoPresupuesto, fecha?: string }
 // Devuelve { ok: true, concepto: ConceptoIA } o { ok: false, error }
 
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.8-flash";
 
 const SYSTEM_PROMPT = `Sos el chief of staff de On Air Music (OAM), la productora de Felipe Busciglio. OAM hace sets de DJs filmados en locaciones que no se repiten: un Boeing 737, la Iglesia de los Capuchinos en Córdoba, un cultivo en La Rioja, el ECU de la Universidad Nacional de Rosario. Canal @onairmusicarg con 838 mil views. El modelo: sessions de 600 a 1.000 personas donde el que tiene el lugar pone el lugar, OAM pone el formato y el video, y un tercero (sponsor, ente de turismo, universidad, destino) paga el cachet internacional. Cada session produce tres cosas: el evento, el video largo con el lugar en el título, y cuando se puede un track original inspirado en el lugar. Con institución pública el formato es de dos días: día uno Forum de industria abierto y gratuito (lo que la institución se lleva), día dos la fiesta.
 
@@ -42,10 +44,33 @@ Devolvé SOLO un JSON válido con esta forma exacta, todo en español salvo los 
 }`;
 
 // GET /api/imaginar
-// Chequeo de salud: confirma que la key esta cargada y que el modelo responde.
-export async function GET() {
+// Sin parametros: chequeo de salud, confirma que la key esta cargada y que el modelo responde.
+// Con ?lugar=Nombre&ciudad=...&provincia=...&tipo=publico|privado&categoria=...: imagina una
+// session con los parametros por defecto (sirve de demo y para probar la voz del mail).
+export async function GET(req: NextRequest) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return NextResponse.json({ ok: false, error: "GEMINI_API_KEY no configurada" }, { status: 500 });
+  const q = req.nextUrl.searchParams;
+  const nombre = q.get("lugar");
+  if (nombre) {
+    const tipo = q.get("tipo") === "privado" ? "privado" : "publico";
+    const lugar: Lugar = {
+      id: "demo",
+      nombre,
+      ciudad: q.get("ciudad") ?? "",
+      provincia: q.get("provincia") ?? "",
+      pais: q.get("pais") ?? "Argentina",
+      lat: Number(q.get("lat") ?? 0),
+      lng: Number(q.get("lng") ?? 0),
+      ubicacionConfirmada: false,
+      categoria: q.get("categoria") ?? "otro",
+      tipo,
+      estado: "imaginada",
+      creadoEn: new Date().toISOString(),
+    };
+    const params: ParamsPresupuesto = { ...PARAMS_DEFAULT, tipoLugar: tipo, barraPropia: tipo === "publico" };
+    return imaginar(apiKey, lugar, params, calcularPresupuesto(params), q.get("fecha") ?? undefined);
+  }
   try {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
     const res = await fetch(url, {
@@ -90,6 +115,15 @@ export async function POST(req: NextRequest) {
     }
 
     const { lugar, params, resultado, fecha } = body;
+    return imaginar(apiKey, lugar, params, resultado, fecha);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return NextResponse.json({ ok: false, error: msg }, { status: 500 });
+  }
+}
+
+async function imaginar(apiKey: string, lugar: Lugar, params: ParamsPresupuesto, resultado: ResultadoPresupuesto, fecha?: string) {
+  try {
     const numeros = {
       entradas: resultado.entradas,
       precioEntradaARS: params.precioEntrada,

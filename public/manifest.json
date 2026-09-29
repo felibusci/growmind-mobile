@@ -1,22 +1,10 @@
 {
-  "name": "GrowMind Mobile",
-  "short_name": "GrowMind",
-  "description": "AI Grow Monitor - Diagnostico inteligente con tu celular",
+  "name": "On Air Atlas",
+  "short_name": "On Air",
+  "description": "Mapa de lugares imposibles. Tocá un punto e imaginá la session ahí.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f8faf8",
-  "theme_color": "#2E7D32",
-  "orientation": "portrait",
-  "icons": [
-    {
-      "src": "/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
+  "background_color": "#0b0b0c",
+  "theme_color": "#0b0b0c",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
 }

@@ -61,6 +61,56 @@ export async function GET(req: NextRequest) {
     }));
     return NextResponse.json({ ok: res.ok, status: res.status, modelos, error: data?.error?.message });
   }
+  if (q.get("probar") === "imagen") {
+    // Prueba minima de generacion de imagen: dice si la capa gratis lo permite.
+    const modelo = q.get("modelo") || "gemini-3.1-flash-lite-image";
+    const t0 = Date.now();
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${apiKey}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts: [{ text: "A small red circle on a black background, flat, minimal." }] }],
+        generationConfig: { responseModalities: ["IMAGE"], imageConfig: { aspectRatio: "1:1" } },
+      }),
+    });
+    const data = await res.json();
+    const parts = data?.candidates?.[0]?.content?.parts ?? [];
+    const img = parts.find((p: { inlineData?: { mimeType: string; data: string } }) => p.inlineData);
+    return NextResponse.json({
+      ok: res.ok && !!img,
+      modelo,
+      status: res.status,
+      ms: Date.now() - t0,
+      mimeType: img?.inlineData?.mimeType,
+      bytes: img ? Math.round((img.inlineData.data.length * 3) / 4) : 0,
+      error: data?.error?.message,
+    });
+  }
+  if (q.get("probar") === "musica") {
+    const modelo = q.get("modelo") || "lyria-3-clip-preview";
+    const t0 = Date.now();
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${apiKey}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts: [{ text: "Melodic techno, 122 bpm, warm analog pads, deep sub bass, dusk over a lake, no vocals." }] }],
+        generationConfig: { responseModalities: ["AUDIO"] },
+      }),
+    });
+    const data = await res.json();
+    const parts = data?.candidates?.[0]?.content?.parts ?? [];
+    const audio = parts.find((p: { inlineData?: { mimeType: string; data: string } }) => p.inlineData);
+    return NextResponse.json({
+      ok: res.ok && !!audio,
+      modelo,
+      status: res.status,
+      ms: Date.now() - t0,
+      mimeType: audio?.inlineData?.mimeType,
+      bytes: audio ? Math.round((audio.inlineData.data.length * 3) / 4) : 0,
+      error: data?.error?.message,
+      raw: audio ? undefined : JSON.stringify(data).slice(0, 600),
+    });
+  }
   const nombre = q.get("lugar");
   if (nombre) {
     const tipo = q.get("tipo") === "privado" ? "privado" : "publico";

@@ -2,14 +2,11 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "GrowMind Mobile",
-  description: "AI Grow Monitor - Diagnostico inteligente con la camara de tu celular",
+  title: "On Air Atlas",
+  description: "Mapa de lugares imposibles. Tocá un punto e imaginá la session On Air ahí.",
   manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "black-translucent",
-    title: "GrowMind",
-  },
+  icons: { icon: "/icon.svg" },
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "On Air Atlas" },
 };
 
 export const viewport: Viewport = {
@@ -17,17 +14,13 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#2E7D32",
+  themeColor: "#0b0b0c",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className="h-full">
-      <body className="min-h-full flex flex-col bg-[#f8faf8]">{children}</body>
+    <html lang="es">
+      <body>{children}</body>
     </html>
   );
 }
